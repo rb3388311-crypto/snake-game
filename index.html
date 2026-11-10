@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ultimate Glowing Horror Cobra - Single Player</title>
+    <style>
+        * { box-sizing: border-box; touch-action: manipulation; }
+        body {
+            background-color: #030303;
+            color: #d1d5db;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .game-container {
+            text-align: center;
+            background: #064e3b;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.4);
+            border: 2px solid #047857;
+            width: 100%;
+            max-width: 420px;
+        }
+        h1 { margin: 0 0 8px 0; font-size: 20px; color: #10b981; text-shadow: 0 0 10px #34d399; }
+        .menu-bar {
+            margin-bottom: 8px;
+        }
+        .scoreboard {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #6ee7b7;
+        }
+        canvas {
+            border: 3px solid #059669;
+            background-color: #01110e;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.9);
+            border-radius: 6px;
+            width: 100%;
+            height: auto;
+            max-width: 360px;
+        }
+        .controls {
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        select, button {
+            padding: 6px 10px;
+            background: #047857;
+            color: white;
+            border: 1px solid #10b981;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover, select:hover { background: #059669; box-shadow: 0 0 10px #10b981; }
+        
+        .touch-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 55px);
+            grid-template-rows: repeat(2, 45px);
+            gap: 6px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .touch-btn {
+            background: #059669;
+            color: white;
+            border: 2px solid #10b981;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        .touch-btn:active { background: #34d399; transform: scale(0.95); }
+        .btn-up { grid-column: 2; grid-row: 1; }
+        .btn-left { grid-column: 1; grid-row: 2; }
+        .btn-down { grid-column: 2; grid-row: 2; }
+        .btn-right { grid-column: 3; grid-row: 2; }
+        
+        .pause-text { color: #facc15; font-weight: bold; font-size: 14px; height: 18px; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🐍 ULTIMATE COBRA 🐍</h1>
+        
+        <div class="menu-bar">
+            <select id="skinSelect" onchange="restartGame()">
+                <option value="0">Skin: Emerald Green</option>
+                <option value="1">Skin: Crimson Red</option>
+                <option value="2">Skin: Electric Blue</option>
+                <option value="3">Skin: Golden Yellow</option>
+                <option value="4">Skin: Neon Purple</option>
+                <option value="5">Skin: Cyber Cyan</option>
+                <option value="6">Skin: Lava Orange</option>
+                <option value="7">Skin: Phantom White</option>
+                <option value="8">Skin: Venom Pink</option>
+                <option value="9">Skin: Toxic Lime</option>
+                <option value="10">Skin: Indigo Glow</option>
+                <option value="11">Skin: Deep Teal</option>
+                <option value="12">Skin: Amber Blaze</option>
+                <option value="13">Skin: Rose Quartz</option>
+                <option value="14">Skin: Deep Violet</option>
+                <option value="15">Skin: Sky Azure</option>
+                <option value="16">Skin: Olive Neon</option>
+                <option value="17">Skin: Coral Flame</option>
+                <option value="18">Skin: Dark Emerald</option>
+                <option value="19">Skin: Stealth Silver</option>
+            </select>
+        </div>
+
+        <div class="scoreboard">
+            <span id="scoreText">Score: 0</span>
+            <span id="highScoreText">High: 0</span>
+            <span id="shikarText">Prey: 0</span>
+        </div>
+        <canvas id="gameCanvas" width="360" height="360"></canvas>
+        <div class="pause-text" id="pauseStatus">Press Start Button!</div>
+        
+        <div class="controls">
+            <button id="startBtn" onclick="startOrPauseGame()">▶️ Start</button>
+            <button id="soundBtn" onclick="toggleSound()">Sound: On</button>
+            <select id="speedSelect" onchange="changeSpeed()">
+                <option value="150">Speed: Lvl 1 (Slow)</option>
+                <option value="120" selected>Speed: Lvl 2</option>
+                <option value="90">Speed: Lvl 3</option>
+                <option value="65">Speed: Lvl 4</option>
+                <option value="45">Speed: Lvl 5 (Fast)</option>
+            </select>
+            <button onclick="restartGame()">Restart</button>
+        </div>
+
+        <div class="touch-pad">
+            <div class="touch-btn btn-up" onclick="changeDir(0, -1)">▲</div>
+            <div class="touch-btn btn-left" onclick="changeDir(-1, 0)">◄</div>
+            <div class="touch-btn btn-down" onclick="changeDir(0, 1)">▼</div>
+            <div class="touch-btn btn-right" onclick="changeDir(1, 0)">►</div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const gridSize = 18;
+        const tileCount = canvas.width / gridSize;
+
+        // 20 Different Cobra Neon Skins
+        const skins = [
+            ["#10b981", "#34d399", "#059669"],
+            ["#ef4444", "#fca5a5", "#dc2626"],
+            ["#3b82f6", "#93c5fd", "#2563eb"],
+            ["#eab308", "#fef08a", "#ca8a04"],
+            ["#a855f7", "#d8b4fe", "#9333ea"],
+            ["#06b6d4", "#67e8f9", "#0891b2"],
+            ["#f97316", "#fdba74", "#ea580c"],
+            ["#f3f4f6", "#ffffff", "#9ca3af"],
+            ["#ec4899", "#fbcfe8", "#db2777"],
+            ["#84cc16", "#bef264", "#65a30d"],
+            ["#6366f1", "#a5b4fc", "#4f46e5"],
+            ["#14b8a6", "#99f6e4", "#0d9488"],
+            ["#d97706", "#fcd34d", "#b45309"],
+            ["#e11d48", "#fda4af", "#be123c"],
+            ["#8b5cf6", "#c4b5fd", "#7c3aed"],
+            ["#0284c7", "#7dd3fc", "#0369a1"],
+            ["#65a30d", "#d9f99d", "#4d7c0f"],
+            ["#f43f5e", "#fecdd3", "#e11d48"],
+            ["#059669", "#a7f3d0", "#047857"],
+            ["#475569", "#cbd5e1", "#334155"]
+        ];
+
+        let snake = [
+            { x: 10, y: 10 },
+            { x: 9, y: 10 },
+            { x: 8, y: 10 },
+            { x: 7, y: 10 }
+        ];
+
+        const animals = ["🐸", "🐭", "🐰", "🐥", "🕷️", "🦇", "🐍", "🦂"];
+        let food = { x: 5, y: 5, icon: "🐸" };
+
+        let dx = 1, dy = 0;
+        let score = 0, shikarCount = 0;
+        let highScore = localStorage.getItem("snakeCobraSingleHS") || 0;
+        let gameInterval;
+        let gameSpeed = 120;
+        let isStarted = false, isPaused = false, isMuted = false;
+        let tongueState = false, stepCount = 0, blinkTimer = 0;
+        let eatFrequency = 180;
+
+        document.getElementById("highScoreText").innerText = "High: " + highScore;
+        document.addEventListener("keydown", handleKeyPress);
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playHissSound(duration = 0.25, volume = 0.2) {
+            if (isMuted) return;
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+
+            try {
+                const bufferSize = audioCtx.sampleRate * duration;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const output = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) { output[i] = Math.random() * 2 - 1; }
+
+                const whiteNoise = audioCtx.createBufferSource();
+                whiteNoise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1500, audioCtx.currentTime);
+
+                const gainNode = audioCtx.createGain();
+                gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+                whiteNoise.connect(filter);
+                filter.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                whiteNoise.start();
+                whiteNoise.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function playEatSound() {
+            if (isMuted) return;
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+
+            eatFrequency = (eatFrequency + 45) % 550 + 100; // Change tune on every eat
+
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(eatFrequency, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(eatFrequency / 2, audioCtx.currentTime + 0.25);
+
+            gainNode.gain.setValueAtTime(0.35, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.25);
+        }
+
+        function playGameOverSound() {
+            if (isMuted) return;
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(130, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.6);
+            gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.6);
+        }
+
+        function changeSpeed() {
+            gameSpeed = parseInt(document.getElementById("speedSelect").value);
+            if (isStarted && !isPaused) startGame();
+        }
+
+        function startOrPauseGame() {
+            if (!isStarted) {
+                isStarted = true;
+                document.getElementById("startBtn").innerText = "⏸️ Pause";
+                document.getElementById("pauseStatus").innerText = "";
+                startGame();
+            } else {
+                isPaused = !isPaused;
+                document.getElementById("pauseStatus").innerText = isPaused ? "⏸️ Game Paused" : "";
+                document.getElementById("startBtn").innerText = isPaused ? "▶️ Resume" : "⏸️ Pause";
+            }
+        }
+
+        function startGame() {
+            clearInterval(gameInterval);
+            gameInterval = setInterval(main, gameSpeed);
+        }
+
+        clearCanvas();
+        drawFood();
+        drawSnake();
+
+        function main() {
+            if (isPaused || !isStarted) return;
+
+            if (hasGameEnded()) {
+                clearInterval(gameInterval);
+                playGameOverSound();
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem("snakeCobraSingleHS", highScore);
+                    document.getElementById("highScoreText").innerText = "High: " + highScore;
+                }
+                alert("☠️ Game Over! Total Score: " + score);
+                restartGame();
+                return;
+            }
+
+            tongueState = !tongueState;
+            stepCount++;
+            blinkTimer++;
+
+            if (stepCount % 4 === 0) playHissSound(0.2, 0.15);
+
+            clearCanvas();
+            drawFood();
+            moveSnake();
+            drawSnake();
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = "#01110e";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = "rgba(16, 185, 129, 0.08)";
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height);
+                ctx.moveTo(0, i); ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+        }
+
+        function drawSnake() {
+            const skinIdx = parseInt(document.getElementById("skinSelect").value);
+            const skinColor = skins[skinIdx % skins.length];
+
+            snake.forEach((part, index) => {
+                const x = part.x * gridSize;
+                const y = part.y * gridSize;
+
+                if (index === 0) {
+                    ctx.save();
+                    ctx.translate(x + gridSize / 2, y + gridSize / 2);
+
+                    let angle = 0;
+                    if (dx === 1) angle = 0;
+                    else if (dx === -1) angle = Math.PI;
+                    else if (dy === 1) angle = Math.PI / 2;
+                    else if (dy === -1) angle = -Math.PI / 2;
+
+                    ctx.rotate(angle);
+
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = skinColor[0];
+                    ctx.fillStyle = skinColor[2];
+                    ctx.beginPath();
+                    ctx.ellipse(-2, 0, 13, 9, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = skinColor[1];
+                    ctx.beginPath();
+                    ctx.ellipse(-4, 0, 9, 6, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = "#022c22";
+                    ctx.beginPath();
+                    ctx.arc(2, 0, 6.5, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = "#ef4444";
+                    ctx.beginPath();
+                    ctx.arc(3, -3.5, 1.8, 0, Math.PI * 2);
+                    ctx.arc(3, 3.5, 1.8, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    if (tongueState) {
+                        ctx.strokeStyle = "#ff0000";
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(8, 0); ctx.lineTo(16, 0); ctx.lineTo(20, -3);
+                        ctx.moveTo(16, 0); ctx.lineTo(20, 3);
+                        ctx.stroke();
+                    }
+                    ctx.shadowBlur = 0;
+                    ctx.restore();
+                } else {
+                    ctx.fillStyle = (index % 2 === 0) ? skinColor[0] : skinColor[1];
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = ctx.fillStyle;
+                    ctx.beginPath();
+                    ctx.arc(x + gridSize / 2, y + gridSize / 2, (gridSize / 2) - 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            });
+        }
+
+        // Wall Pass System (Teleports to opposite side)
+        function moveSnake() {
+            let newX = snake[0].x + dx;
+            let newY = snake[0].y + dy;
+
+            if (newX < 0) newX = tileCount - 1;
+            else if (newX >= tileCount) newX = 0;
+            if (newY < 0) newY = tileCount - 1;
+            else if (newY >= tileCount) newY = 0;
+
+            const head = { x: newX, y: newY };
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score += 20;
+                shikarCount += 1;
+                document.getElementById("scoreText").innerText = "Score: " + score;
+                document.getElementById("shikarText").innerText = "Prey: " + shikarCount;
+                
+                playEatSound();
+                generateFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function hasGameEnded() {
+            for (let i = 4; i < snake.length; i++) {
+                if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
+            }
+            return false; // Wall hit handled by Wall Pass system!
+        }
+
+        function changeDir(newDx, newDy) {
+            if (isPaused || !isStarted) return;
+            if (newDx === -dx && newDx !== 0) return;
+            if (newDy === -dy && newDy !== 0) return;
+            dx = newDx; dy = newDy;
+            playHissSound(0.25, 0.2);
+        }
+
+        function handleKeyPress(event) {
+            const key = event.key;
+            if (key === " " || key === "Spacebar") { startOrPauseGame(); return; }
+            if (isPaused || !isStarted) return;
+
+            if (key === "ArrowLeft" || key === "a" || key === "A") changeDir(-1, 0);
+            else if (key === "ArrowUp" || key === "w" || key === "W") changeDir(0, -1);
+            else if (key === "ArrowRight" || key === "d" || key === "D") changeDir(1, 0);
+            else if (key === "ArrowDown" || key === "s" || key === "S") changeDir(0, 1);
+        }
+
+        function generateFood() {
+            food.x = Math.floor(Math.random() * tileCount);
+            food.y = Math.floor(Math.random() * tileCount);
+            food.icon = animals[Math.floor(Math.random() * animals.length)];
+        }
+
+        function drawFood() {
+            const x = food.x * gridSize;
+            const y = food.y * gridSize;
+            if (Math.floor(blinkTimer / 3) % 2 === 0) {
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = "#facc15";
+            }
+            ctx.font = "16px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(food.icon, x + gridSize / 2, y + gridSize / 2 + 1);
+            ctx.shadowBlur = 0;
+        }
+
+        function toggleSound() {
+            isMuted = !isMuted;
+            document.getElementById("soundBtn").innerText = isMuted ? "Sound: Off" : "Sound: On";
+        }
+
+        function restartGame() {
+            snake = [
+                { x: 10, y: 10 },
+                { x: 9, y: 10 },
+                { x: 8, y: 10 },
+                { x: 7, y: 10 }
+            ];
+            dx = 1; dy = 0;
+            score = 0; shikarCount = 0;
+            gameSpeed = parseInt(document.getElementById("speedSelect").value);
+            isStarted = false; isPaused = false;
+            document.getElementById("pauseStatus").innerText = "Press Start Button!";
+            document.getElementById("startBtn").innerText = "▶️ Start";
+            document.getElementById("scoreText").innerText = "Score: " + score;
+            document.getElementById("shikarText").innerText = "Prey: " + shikarCount;
+            generateFood();
+            clearCanvas();
+            drawFood();
+            drawSnake();
+        }
+    </script>
+</body>
+</html>
